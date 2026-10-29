@@ -23,10 +23,12 @@ function Login() {
     setIsLoggingIn(true)
 
     axios
-      `${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        email,
-        password,
-      })
+      `${import.meta.env.VITE_API_URL}/api/auth/login`,
+  {
+    email,
+    password,
+  }
+);
       .then((response) => {
         localStorage.setItem('token', response.data.token)
         navigate('/introduction')
