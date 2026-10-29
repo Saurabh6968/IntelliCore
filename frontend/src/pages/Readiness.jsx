@@ -1,22 +1,45 @@
+import { useEffect, useState } from 'react'
+
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5001'
+
+function getToken() {
+  return localStorage.getItem('token')
+}
+
 function Readiness() {
-  const categories = [
-    {
-      name: 'Resume Quality',
-      score: 82
-    },
-    {
-      name: 'ATS Compatibility',
-      score: 85
-    },
-    {
-      name: 'Skill Match',
-      score: 74
-    },
-    {
-      name: 'Interview Performance',
-      score: 68
+  const [readiness, setReadiness] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadReadiness() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/placement-readiness`,
+          {
+            headers: {
+              Authorization: `Bearer ${getToken()}`
+            }
+          }
+        )
+
+        const data = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Something went wrong')
+        }
+
+        setReadiness(data.readiness)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    loadReadiness()
+  }, [])
 
   return (
     <div className="readiness-page">
@@ -39,201 +62,204 @@ function Readiness() {
       </div>
 
 
-      {/* Overall Readiness */}
-
-      <div className="readiness-overview">
-
-        <div className="readiness-score-section">
-
-          <span className="card-eyebrow">
-            OVERALL READINESS
-          </span>
-
-          <div className="readiness-big-score">
-            68%
-          </div>
-
-          <span className="readiness-status">
-            Good Progress
-          </span>
-
-          <p>
-            You have built a good foundation for placement.
-            Focus on improving your technical skills and interview
-            performance to become more placement-ready.
-          </p>
-
+      {loading && (
+        <div className="readiness-state-card">
+          Calculating your readiness...
         </div>
+      )}
 
-
-        <div className="readiness-progress-section">
-
-          <div className="readiness-progress-top">
-            <span>Placement Readiness</span>
-            <strong>68 / 100</strong>
-          </div>
-
-          <div className="readiness-large-bar">
-
-            <div
-              className="readiness-large-fill"
-              style={{ width: '68%' }}
-            ></div>
-
-          </div>
-
-          <div className="readiness-scale">
-            <span>Needs Work</span>
-            <span>Developing</span>
-            <span>Ready</span>
-          </div>
-
+      {!loading && error && (
+        <div className="readiness-error-message">
+          {error}
         </div>
-
-      </div>
-
-
-      {/* Breakdown */}
-
-      <div className="readiness-breakdown">
-
-        <div className="readiness-section-header">
-
-          <div>
-            <span className="card-eyebrow">
-              READINESS BREAKDOWN
-            </span>
-
-            <h2>Performance Areas</h2>
-
-            <p>
-              Your readiness score across key placement factors.
-            </p>
-          </div>
-
-        </div>
+      )}
 
 
-        <div className="readiness-category-list">
+      {!loading && readiness && (
+        <>
 
-          {categories.map((category) => (
+          {/* Overall Readiness */}
 
-            <div
-              className="readiness-category"
-              key={category.name}
-            >
+          <div className="readiness-overview">
 
-              <div className="readiness-category-top">
+            <div className="readiness-score-section">
 
-                <span>
-                  {category.name}
-                </span>
+              <span className="card-eyebrow">
+                OVERALL READINESS
+              </span>
 
-                <strong>
-                  {category.score}%
-                </strong>
-
+              <div className="readiness-big-score">
+                {readiness.overallScore}%
               </div>
 
-              <div className="readiness-category-bar">
+              <span
+                className={`readiness-status status-${readiness.status
+                  .toLowerCase()
+                  .replace(' ', '-')}`}
+              >
+                {readiness.status}
+              </span>
+
+              <p>
+                {readiness.summary}
+              </p>
+
+            </div>
+
+
+            <div className="readiness-progress-section">
+
+              <div className="readiness-progress-top">
+                <span>Placement Readiness</span>
+                <strong>{readiness.overallScore} / 100</strong>
+              </div>
+
+              <div className="readiness-large-bar">
 
                 <div
-                  className="readiness-category-fill"
-                  style={{
-                    width: `${category.score}%`
-                  }}
+                  className="readiness-large-fill"
+                  style={{ width: `${readiness.overallScore}%` }}
                 ></div>
 
               </div>
 
+              <div className="readiness-scale">
+                <span>Needs Work</span>
+                <span>Developing</span>
+                <span>Ready</span>
+              </div>
+
             </div>
 
-          ))}
-
-        </div>
-
-      </div>
-
-
-      {/* Improvement Areas */}
-
-      <div className="readiness-improvements">
-
-        <div className="readiness-section-header">
-
-          <div>
-            <span className="card-eyebrow">
-              RECOMMENDED ACTIONS
-            </span>
-
-            <h2>Areas to Improve</h2>
-
-            <p>
-              Focus on these areas to increase your readiness score.
-            </p>
-          </div>
-
-        </div>
-
-
-        <div className="improvement-grid">
-
-          <div className="improvement-card">
-
-            <span className="improvement-number">
-              01
-            </span>
-
-            <h3>
-              Strengthen Technical Skills
-            </h3>
-
-            <p>
-              Focus on Data Structures, Algorithms and
-              Machine Learning fundamentals.
-            </p>
-
           </div>
 
 
-          <div className="improvement-card">
+          {/* Breakdown */}
 
-            <span className="improvement-number">
-              02
-            </span>
+          <div className="readiness-breakdown">
 
-            <h3>
-              Practice Interviews
-            </h3>
+            <div className="readiness-section-header">
 
-            <p>
-              Complete more interview sessions and improve
-              the quality of your answers.
-            </p>
+              <div>
+                <span className="card-eyebrow">
+                  READINESS BREAKDOWN
+                </span>
+
+                <h2>Performance Areas</h2>
+
+                <p>
+                  Calculated from your resume, skill gap, interviews
+                  and roadmap progress ({readiness.startedCount} of{' '}
+                  {readiness.totalCount} areas started).
+                </p>
+              </div>
+
+            </div>
+
+
+            <div className="readiness-category-list">
+
+              {readiness.categories.map((category) => (
+
+                <div
+                  className="readiness-category"
+                  key={category.key}
+                >
+
+                  <div className="readiness-category-top">
+
+                    <span>
+                      {category.name}
+                      <small className="readiness-weight">
+                        {category.weight}% of score
+                      </small>
+                    </span>
+
+                    {category.score === null ? (
+                      <strong className="readiness-not-started">
+                        Not started
+                      </strong>
+                    ) : (
+                      <strong>
+                        {category.score}%
+                      </strong>
+                    )}
+
+                  </div>
+
+                  <div className="readiness-category-bar">
+
+                    <div
+                      className="readiness-category-fill"
+                      style={{
+                        width: `${category.score ?? 0}%`
+                      }}
+                    ></div>
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
 
           </div>
 
 
-          <div className="improvement-card">
+          {/* Improvement Areas */}
 
-            <span className="improvement-number">
-              03
-            </span>
+          <div className="readiness-improvements">
 
-            <h3>
-              Optimize Your Resume
-            </h3>
+            <div className="readiness-section-header">
 
-            <p>
-              Improve keywords, achievements and role-specific
-              resume content.
-            </p>
+              <div>
+                <span className="card-eyebrow">
+                  RECOMMENDED ACTIONS
+                </span>
+
+                <h2>Areas to Improve</h2>
+
+                <p>
+                  Your lowest-scoring areas. Focus on these to raise
+                  your readiness score.
+                </p>
+              </div>
+
+            </div>
+
+
+            <div className="improvement-grid">
+
+              {readiness.improvements.map((item, index) => (
+
+                <div
+                  className="improvement-card"
+                  key={item.key}
+                >
+
+                  <span className="improvement-number">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+
+                  <h3>
+                    {item.title}
+                  </h3>
+
+                  <p>
+                    {item.description}
+                  </p>
+
+                </div>
+
+              ))}
+
+            </div>
 
           </div>
 
-        </div>
-
-      </div>
+        </>
+      )}
 
     </div>
   )

@@ -1,4 +1,6 @@
-function ReadinessCard() {
+function ReadinessCard({ data, onView }) {
+  const remaining = 100 - data.overallScore
+
   return (
     <div className="readiness-card">
 
@@ -9,38 +11,37 @@ function ReadinessCard() {
         </div>
 
         <span className="readiness-label">
-          Good Progress
+          {data.status}
         </span>
       </div>
 
       <div className="readiness-main">
 
         <div className="readiness-score-circle">
-          <strong>68%</strong>
+          <strong>{data.overallScore}%</strong>
           <span>Ready</span>
         </div>
 
         <div className="readiness-summary">
-          <p>
-            Your readiness is based on your resume, skills and interview
-            performance.
-          </p>
+          <p>{data.summary}</p>
 
           <div className="readiness-bar">
             <div
               className="readiness-bar-fill"
-              style={{ width: '68%' }}
+              style={{ width: `${data.overallScore}%` }}
             ></div>
           </div>
 
           <span className="readiness-target">
-            32% improvement needed
+            {remaining > 0
+              ? `${remaining}% improvement needed`
+              : 'Fully ready'}
           </span>
         </div>
 
       </div>
 
-      <button className="readiness-view-button">
+      <button className="readiness-view-button" onClick={onView}>
         View Readiness Report →
       </button>
 

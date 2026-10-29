@@ -1,7 +1,37 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
 function Introduction() {
   const navigate = useNavigate()
+  const [firstName, setFirstName] = useState('')
+
+  // Load the logged-in user's first name
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) return
+
+    let cancelled = false
+
+    fetch(`${API_URL}/api/users/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled || !data || !data.user || !data.user.name) return
+
+        const first = data.user.name.trim().split(' ')[0]
+        setFirstName(first.charAt(0).toUpperCase() + first.slice(1))
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function handleDashboard() {
     navigate('/dashboard')
@@ -31,10 +61,12 @@ function Introduction() {
         </div>
 
         <div className="intro-user">
-          <span>Hi, Shivay 👋</span>
+          <span>
+            {firstName ? `Hi, ${firstName} 👋` : 'Hi there 👋'}
+          </span>
 
           <div className="intro-avatar">
-            👤
+            {firstName ? firstName.charAt(0) : '👤'}
           </div>
         </div>
 
@@ -157,7 +189,7 @@ function Introduction() {
 
                   <div className="mock-welcome">
                     <h3>
-                      Welcome back, Shivay! 👋
+                      Welcome back! 👋
                     </h3>
 
                     <p>

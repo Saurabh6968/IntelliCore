@@ -1,219 +1,186 @@
+
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 function ResumeResults() {
+  const [analysis, setAnalysis] = useState(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const savedAnalysis = sessionStorage.getItem('resumeAnalysis')
+
+    if (!savedAnalysis) {
+      navigate('/resume-analysis')
+      return
+    }
+
+    try {
+      setAnalysis(JSON.parse(savedAnalysis))
+    } catch {
+      sessionStorage.removeItem('resumeAnalysis')
+      navigate('/resume-analysis')
+    }
+  }, [navigate])
+
+  if (!analysis) {
+    return <div className="results-page">Loading analysis...</div>
+  }
+
+  const mainSkills = Array.isArray(analysis.mainSkills)
+    ? analysis.mainSkills
+    : []
+
+  const strongAreas = Array.isArray(analysis.strongAreas)
+    ? analysis.strongAreas
+    : []
+
+  const missingSkills = Array.isArray(analysis.missingSkills)
+    ? analysis.missingSkills
+    : []
+
+  const suitableRoles = Array.isArray(analysis.suitableRoles)
+    ? analysis.suitableRoles
+    : []
+
+  const suggestions = Array.isArray(analysis.suggestions)
+    ? analysis.suggestions
+    : []
+
   return (
     <div className="results-page">
-
       <div className="page-header">
         <span className="card-eyebrow">AI RESUME REPORT</span>
-
         <h1>Resume Analysis Results</h1>
-
         <p>
-          Here's what IntelliCore found in your resume and where you
-          can improve it.
+          Here's what the AI found in your resume and where you can improve.
         </p>
       </div>
 
-
-      {/* Overall Score */}
-
       <div className="results-overview">
-
         <div className="overall-score">
-
-          <span className="card-eyebrow">
-            OVERALL RESUME SCORE
-          </span>
-
-          <div className="overall-score-value">
-            82%
-          </div>
-
-          <span className="score-status">
-            Good Resume
-          </span>
-
+          <span className="card-eyebrow">RESUME ANALYSIS</span>
+          <div className="overall-score-value">✓</div>
+          <span className="score-status">Analysis Complete</span>
           <p>
-            Your resume has a strong foundation but there are a few
-            areas that can be improved for better placement readiness.
+            Your resume has been analyzed. Review the findings and suggestions
+            below.
           </p>
-
         </div>
-
 
         <div className="score-summary">
-
           <div className="summary-item">
-            <span>ATS Compatibility</span>
-            <strong>85%</strong>
+            <span>Skills Identified</span>
+            <strong>{mainSkills.length}</strong>
           </div>
-
           <div className="summary-item">
-            <span>Content Quality</span>
-            <strong>82%</strong>
+            <span>Strong Areas</span>
+            <strong>{strongAreas.length}</strong>
           </div>
-
           <div className="summary-item">
-            <span>Skill Relevance</span>
-            <strong>78%</strong>
+            <span>Missing Skills</span>
+            <strong>{missingSkills.length}</strong>
           </div>
-
           <div className="summary-item">
-            <span>Formatting</span>
-            <strong>88%</strong>
+            <span>Suggested Roles</span>
+            <strong>{suitableRoles.length}</strong>
           </div>
-
         </div>
-
       </div>
-
-
-      {/* Strengths and Improvements */}
 
       <div className="results-grid">
+        <div className="result-section">
+          <div className="result-section-header">
+            <div className="result-icon success-icon">✓</div>
+            <div>
+              <h3>Skills Identified</h3>
+              <p>Skills found in your resume.</p>
+            </div>
+          </div>
+
+          <div className="result-list">
+            {mainSkills.length ? mainSkills.map((skill, index) => (
+              <div className="result-list-item" key={index}>
+                <span>✓</span>
+                <div><strong>{skill}</strong></div>
+              </div>
+            )) : <p>No skills were identified.</p>}
+          </div>
+        </div>
 
         <div className="result-section">
-
           <div className="result-section-header">
-            <div className="result-icon success-icon">
-              ✓
-            </div>
-
+            <div className="result-icon success-icon">✓</div>
             <div>
               <h3>Resume Strengths</h3>
-              <p>What your resume is doing well.</p>
+              <p>Strong points identified by the AI.</p>
             </div>
           </div>
-
 
           <div className="result-list">
-
-            <div className="result-list-item">
-              <span>✓</span>
-              <div>
-                <strong>Clear technical skills</strong>
-                <p>
-                  Your technical skills are clearly listed and easy to identify.
-                </p>
+            {strongAreas.length ? strongAreas.map((item, index) => (
+              <div className="result-list-item" key={index}>
+                <span>✓</span>
+                <div><p>{item}</p></div>
               </div>
-            </div>
-
-            <div className="result-list-item">
-              <span>✓</span>
-              <div>
-                <strong>Relevant project experience</strong>
-                <p>
-                  Your projects demonstrate practical technical experience.
-                </p>
-              </div>
-            </div>
-
-            <div className="result-list-item">
-              <span>✓</span>
-              <div>
-                <strong>Good formatting</strong>
-                <p>
-                  The overall resume structure is clean and readable.
-                </p>
-              </div>
-            </div>
-
+            )) : <p>No strong areas were returned.</p>}
           </div>
-
         </div>
-
 
         <div className="result-section">
-
           <div className="result-section-header">
-            <div className="result-icon warning-icon">
-              !
-            </div>
-
+            <div className="result-icon warning-icon">!</div>
             <div>
-              <h3>Areas to Improve</h3>
-              <p>Changes that could strengthen your resume.</p>
+              <h3>Missing Skills</h3>
+              <p>Potential skills to develop for your target roles.</p>
             </div>
           </div>
-
 
           <div className="result-list">
-
-            <div className="result-list-item">
-              <span>!</span>
-              <div>
-                <strong>Add measurable achievements</strong>
-                <p>
-                  Include numbers and measurable results in your projects.
-                </p>
+            {missingSkills.length ? missingSkills.map((skill, index) => (
+              <div className="result-list-item" key={index}>
+                <span>!</span>
+                <div><p>{skill}</p></div>
               </div>
-            </div>
-
-            <div className="result-list-item">
-              <span>!</span>
-              <div>
-                <strong>Improve your summary</strong>
-                <p>
-                  Make your professional summary more specific to your target role.
-                </p>
-              </div>
-            </div>
-
-            <div className="result-list-item">
-              <span>!</span>
-              <div>
-                <strong>Add relevant keywords</strong>
-                <p>
-                  Include keywords that match your desired technical role.
-                </p>
-              </div>
-            </div>
-
+            )) : <p>No missing skills were reported.</p>}
           </div>
-
         </div>
 
+        <div className="result-section">
+          <div className="result-section-header">
+            <div className="result-icon success-icon">↗</div>
+            <div>
+              <h3>Suitable Roles</h3>
+              <p>Roles that may match your current resume.</p>
+            </div>
+          </div>
+
+          <div className="result-list">
+            {suitableRoles.length ? suitableRoles.map((role, index) => (
+              <div className="result-list-item" key={index}>
+                <span>↗</span>
+                <div><strong>{role}</strong></div>
+              </div>
+            )) : <p>No suitable roles were returned.</p>}
+          </div>
+        </div>
       </div>
-
-
-      {/* Recommendations */}
 
       <div className="recommendations-card">
-
         <div>
-          <span className="card-eyebrow">
-            AI RECOMMENDATIONS
-          </span>
-
+          <span className="card-eyebrow">AI RECOMMENDATIONS</span>
           <h3>Recommended Next Steps</h3>
-
-          <p>
-            Focus on these improvements before submitting your resume
-            for placement opportunities.
-          </p>
+          <p>Suggestions generated from your resume analysis.</p>
         </div>
-
 
         <div className="recommendation-items">
-
-          <div className="recommendation-item">
-            <span>01</span>
-            <strong>Strengthen project descriptions</strong>
-          </div>
-
-          <div className="recommendation-item">
-            <span>02</span>
-            <strong>Add measurable achievements</strong>
-          </div>
-
-          <div className="recommendation-item">
-            <span>03</span>
-            <strong>Optimize keywords for ATS</strong>
-          </div>
-
+          {suggestions.length ? suggestions.map((suggestion, index) => (
+            <div className="recommendation-item" key={index}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>{suggestion}</strong>
+            </div>
+          )) : <p>No recommendations were returned.</p>}
         </div>
-
       </div>
-
     </div>
   )
 }

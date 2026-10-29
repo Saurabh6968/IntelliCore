@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 function ResumeAnalysis() {
   const [resume, setResume] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [error, setError] = useState('')
 
   const navigate = useNavigate()
 
@@ -15,17 +17,55 @@ function ResumeAnalysis() {
     }
   }
 
-  function handleAnalyze() {
-    if (!resume) {
-      return
-    }
 
-    setIsAnalyzing(true)
 
-    setTimeout(() => {
-      navigate('/resume-results')
-    }, 1800)
+async function handleAnalyze() {
+  if (!resume) return
+
+  const token = localStorage.getItem('token')
+
+  if (!token) {
+    setError('Please log in before analyzing your resume.')
+    return
   }
+
+  setIsAnalyzing(true)
+  setError('')
+
+  try {
+    const formData = new FormData()
+    formData.append('resume', resume)
+
+    const response = await axios.post(
+      'http://localhost:5001/api/ai/analyze-upload',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    sessionStorage.setItem(
+      'resumeAnalysis',
+      JSON.stringify(response.data.analysis)
+    )
+
+    sessionStorage.setItem(
+      'atsResult',
+      JSON.stringify(response.data.ats)
+    )
+
+    navigate('/resume-results')
+  } catch (err) {
+    setError(
+      err.response?.data?.message ||
+      'Resume analysis failed. Please try again.'
+    )
+  } finally {
+    setIsAnalyzing(false)
+  }
+}
 
   return (
     <div className="resume-page">
@@ -129,6 +169,7 @@ function ResumeAnalysis() {
             ? 'Analyzing Resume...'
             : 'Analyze Resume →'}
         </button>
+        {error && <p role="alert">{error}</p>}
 
 
         {/* Loading */}

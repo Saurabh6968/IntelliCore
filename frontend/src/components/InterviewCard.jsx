@@ -1,4 +1,4 @@
-function InterviewCard() {
+function InterviewCard({ stats, onStart }) {
   return (
     <div className="interview-card">
 
@@ -19,24 +19,26 @@ function InterviewCard() {
       <div className="interview-stats">
 
         <div>
-          <strong>12</strong>
-          <span>Questions</span>
+          <strong>{stats.answered}</strong>
+          <span>Answered</span>
         </div>
 
         <div>
-          <strong>3</strong>
+          <strong>{stats.sessions}</strong>
           <span>Sessions</span>
         </div>
 
         <div>
-          <strong>76%</strong>
+          <strong>
+            {stats.average === null ? '—' : `${stats.average}%`}
+          </strong>
           <span>Avg. Score</span>
         </div>
 
       </div>
 
-      <button className="interview-start-button">
-        Start Interview →
+      <button className="interview-start-button" onClick={onStart}>
+        {stats.sessions > 0 ? 'Start Interview →' : 'Take Your First Interview →'}
       </button>
 
     </div>

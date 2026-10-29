@@ -1,4 +1,4 @@
-function SkillGap() {
+function SkillGap({ data, onView }) {
   return (
     <div className="skill-gap-card">
 
@@ -6,85 +6,54 @@ function SkillGap() {
         <div>
           <span className="card-eyebrow">SKILL ANALYSIS</span>
           <h3>Skill Gap</h3>
-          <p>Areas that need your attention.</p>
+          <p>
+            {data
+              ? `Target role: ${data.targetRole}`
+              : 'Areas that need your attention.'}
+          </p>
         </div>
 
         <div className="skill-match-score">
-          <strong>74%</strong>
+          <strong>
+            {data && data.matchScore !== null ? `${data.matchScore}%` : '—'}
+          </strong>
           <span>Match</span>
         </div>
       </div>
 
       <div className="skill-list">
 
-        <div className="skill-row">
-          <div className="skill-info">
-            <span>Data Structures</span>
-            <small>Needs Improvement</small>
-          </div>
+        {!data && (
+          <p className="dashboard-empty">
+            No skill gap analysis yet. Run one for your target role.
+          </p>
+        )}
 
-          <div className="skill-progress">
-            <div
-              className="skill-progress-fill danger"
-              style={{ width: '45%' }}
-            ></div>
-          </div>
+        {data &&
+          data.skills.map((skill) => (
+            <div className="skill-row" key={skill.name}>
+              <div className="skill-info">
+                <span>{skill.name}</span>
+                <small>{skill.have ? 'You have this' : 'Needs Improvement'}</small>
+              </div>
 
-          <strong>45%</strong>
-        </div>
+              <div className="skill-progress">
+                <div
+                  className={`skill-progress-fill ${
+                    skill.have ? 'success' : 'danger'
+                  }`}
+                  style={{ width: skill.have ? '100%' : '0%' }}
+                ></div>
+              </div>
 
-        <div className="skill-row">
-          <div className="skill-info">
-            <span>React.js</span>
-            <small>Intermediate</small>
-          </div>
-
-          <div className="skill-progress">
-            <div
-              className="skill-progress-fill warning"
-              style={{ width: '68%' }}
-            ></div>
-          </div>
-
-          <strong>68%</strong>
-        </div>
-
-        <div className="skill-row">
-          <div className="skill-info">
-            <span>Machine Learning</span>
-            <small>Needs Improvement</small>
-          </div>
-
-          <div className="skill-progress">
-            <div
-              className="skill-progress-fill danger"
-              style={{ width: '42%' }}
-            ></div>
-          </div>
-
-          <strong>42%</strong>
-        </div>
-
-        <div className="skill-row">
-          <div className="skill-info">
-            <span>Python</span>
-            <small>Good</small>
-          </div>
-
-          <div className="skill-progress">
-            <div
-              className="skill-progress-fill success"
-              style={{ width: '82%' }}
-            ></div>
-          </div>
-
-          <strong>82%</strong>
-        </div>
+              <strong>{skill.have ? 'Have' : 'Missing'}</strong>
+            </div>
+          ))}
 
       </div>
 
-      <button className="dashboard-link-button">
-        View Full Skill Analysis →
+      <button className="dashboard-link-button" onClick={onView}>
+        {data ? 'View Full Skill Analysis →' : 'Run Skill Analysis →'}
       </button>
 
     </div>

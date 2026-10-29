@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pkl
+
+# Additional local environments and files
+venv/
+.venv-deploy/
+.DS_Store

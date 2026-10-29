@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-
 import Sidebar from './components/Sidebar'
 import Profile from './pages/Profile'
 import Register from './pages/Register'
@@ -16,6 +15,7 @@ import LearningRoadmap from './pages/LearningRoadmap'
 import Interview from './pages/Interview'
 import Readiness from './pages/Readiness'
 import CareerGuidance from './pages/CareerGuidance'
+import PlacementProfile from './pages/PlacementProfile'
 
 import './App.css'
 
@@ -37,7 +37,7 @@ function AppLayout() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
-        
+
 
       </Routes>
     )
@@ -53,7 +53,7 @@ function AppLayout() {
         <Routes>
 
           <Route path="/dashboard" element={<Dashboard />} />
-           
+
 
           <Route path="/resume" element={<ResumeAnalysis />} />
 
@@ -84,6 +84,11 @@ function AppLayout() {
           <Route
             path="/career"
             element={<CareerGuidance />}
+          />
+
+          <Route
+            path="/placement-profile"
+            element={<PlacementProfile />}
           />
 
         </Routes>

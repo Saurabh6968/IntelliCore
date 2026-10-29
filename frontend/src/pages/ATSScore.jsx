@@ -1,38 +1,112 @@
-function ATSScore() {
-  const atsScore = 85
 
-  const categories = [
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+function ATSScore() {
+  const [ats, setAts] = useState(null)
+  const [hasResult, setHasResult] = useState(false)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    try {
+      const savedAts = sessionStorage.getItem('atsResult')
+
+      if (savedAts) {
+        const parsedAts = JSON.parse(savedAts)
+
+        if (
+          parsedAts &&
+          typeof parsedAts.score === 'number' &&
+          Array.isArray(parsedAts.categories)
+        ) {
+          setAts(parsedAts)
+          setHasResult(true)
+        }
+      }
+    } catch (error) {
+      console.error('Unable to load ATS result:', error)
+    }
+  }, [])
+
+  const atsScore = ats?.score ?? null
+
+  const descriptions = {
+    'Keyword Match':
+      'Relevant technical keywords found in your resume.',
+    Formatting:
+      'Basic resume text readability check.',
+    'Section Structure':
+      'Important resume sections detected.',
+  }
+
+  const categories = (ats?.categories || []).map((category) => ({
+    ...category,
+    description:
+      descriptions[category.name] ||
+      'Resume compatibility indicator.',
+  }))
+
+  const scoreStatus =
+    atsScore === null
+      ? 'Awaiting Analysis'
+      : atsScore >= 80
+        ? 'Excellent Compatibility'
+        : atsScore >= 60
+          ? 'Good Compatibility'
+          : atsScore >= 40
+            ? 'Needs Improvement'
+            : 'Low Compatibility'
+
+  const strengths = [
+    {
+      name: 'Section Structure',
+      threshold: 70,
+      message: 'Your resume contains important sections.',
+    },
     {
       name: 'Keyword Match',
-      score: 88,
-      description: 'Relevant keywords found in your resume.'
+      threshold: 70,
+      message: 'Your resume has relevant keyword coverage.',
     },
     {
       name: 'Formatting',
-      score: 92,
-      description: 'Resume structure is easy for ATS systems to read.'
+      threshold: 70,
+      message: 'Your resume passed the basic text readability check.',
+    },
+  ]
+
+  const improvements = [
+    {
+      name: 'Keyword Match',
+      message: 'Review your resume keywords for your target role.',
     },
     {
       name: 'Section Structure',
-      score: 80,
-      description: 'Most important resume sections are present.'
+      message: 'Make sure your education, experience, projects and skills are clearly listed.',
     },
     {
-      name: 'Skill Relevance',
-      score: 78,
-      description: 'Skills have good alignment with your target role.'
-    }
+      name: 'Formatting',
+      message: 'Keep your resume readable and use clear section headings.',
+    },
   ]
+
+  const categoryScore = (name) =>
+    categories.find((category) => category.name === name)?.score
+
+  const visibleStrengths = strengths.filter((item) => {
+    const score = categoryScore(item.name)
+    return typeof score === 'number' && score >= item.threshold
+  })
+
+  const visibleImprovements = improvements.filter((item) => {
+    const score = categoryScore(item.name)
+    return typeof score === 'number' && score < 70
+  })
 
   return (
     <div className="ats-page">
-
-      {/* Header */}
-
       <div className="page-header">
-        <span className="card-eyebrow">
-          RESUME INTELLIGENCE
-        </span>
+        <span className="card-eyebrow">RESUME INTELLIGENCE</span>
 
         <h1>ATS Score</h1>
 
@@ -42,47 +116,50 @@ function ATSScore() {
         </p>
       </div>
 
-
-      {/* Main Score */}
+      {!hasResult && (
+        <div className="ats-feedback-card">
+          <h3>No ATS result available</h3>
+          <p>
+            Upload and analyze your resume first to see your ATS score.
+          </p>
+          <button
+            className="analyze-resume-button"
+            onClick={() => navigate('/resume-analysis')}
+          >
+            Analyze Resume →
+          </button>
+        </div>
+      )}
 
       <div className="ats-main-card">
-
         <div className="ats-score-circle">
-
           <div className="ats-score-number">
-            {atsScore}%
+            {atsScore === null ? '—' : `${atsScore}%`}
           </div>
 
-          <span>
-            ATS Score
-          </span>
-
+          <span>ATS Score</span>
         </div>
 
-
         <div className="ats-score-content">
-
-          <span className="score-status">
-            Good Compatibility
-          </span>
+          <span className="score-status">{scoreStatus}</span>
 
           <h2>
-            Your resume is ATS-friendly
+            {atsScore === null
+              ? 'Your resume score will appear here'
+              : 'Your resume compatibility result'}
           </h2>
 
           <p>
-            Your resume follows most common ATS requirements.
-            Improving keyword alignment and skill relevance could
-            make it stronger for your target role.
+            {atsScore === null
+              ? 'Analyze your resume to calculate a basic ATS compatibility estimate.'
+              : 'This score is calculated from resume section structure, keyword coverage and a basic text readability check. It is an estimate, not a score from a commercial ATS.'}
           </p>
 
           <div className="ats-progress">
-
             <div
               className="ats-progress-fill"
-              style={{ width: `${atsScore}%` }}
-            ></div>
-
+              style={{ width: `${atsScore ?? 0}%` }}
+            />
           </div>
 
           <div className="ats-progress-labels">
@@ -90,146 +167,91 @@ function ATSScore() {
             <span>ATS Compatibility</span>
             <span>100</span>
           </div>
-
         </div>
-
       </div>
 
-
-      {/* Category Scores */}
-
       <div className="ats-categories">
-
         {categories.map((category) => (
           <div
             className="ats-category-card"
             key={category.name}
           >
-
             <div className="ats-category-top">
-
-              <span>
-                {category.name}
-              </span>
+              <span>{category.name}</span>
 
               <strong>
                 {category.score}%
               </strong>
-
             </div>
 
             <div className="category-progress">
-
               <div
                 className="category-progress-fill"
                 style={{
-                  width: `${category.score}%`
+                  width: `${category.score ?? 0}%`,
                 }}
-              ></div>
-
+              />
             </div>
 
-            <p>
-              {category.description}
-            </p>
-
+            <p>{category.description}</p>
           </div>
         ))}
-
       </div>
 
-
-      {/* Feedback */}
-
       <div className="ats-feedback-grid">
-
-        {/* Strengths */}
-
         <div className="ats-feedback-card">
-
           <div className="feedback-header">
-
-            <div className="feedback-icon success-icon">
-              ✓
-            </div>
+            <div className="feedback-icon success-icon">✓</div>
 
             <div>
               <h3>ATS Strengths</h3>
-
-              <p>
-                Areas where your resume performs well.
-              </p>
+              <p>Areas where your resume performs well.</p>
             </div>
-
           </div>
-
 
           <div className="feedback-list">
-
-            <div>
-              <span>✓</span>
-              <strong>Clean resume structure</strong>
-            </div>
-
-            <div>
-              <span>✓</span>
-              <strong>Good keyword coverage</strong>
-            </div>
-
-            <div>
-              <span>✓</span>
-              <strong>Readable formatting</strong>
-            </div>
-
+            {!hasResult || visibleStrengths.length === 0 ? (
+              <p>Analyze your resume to identify strengths.</p>
+            ) : (
+              visibleStrengths.map((item) => (
+                <div key={item.name}>
+                  <span>✓</span>
+                  <strong>{item.message}</strong>
+                </div>
+              ))
+            )}
           </div>
-
         </div>
 
-
-        {/* Improvements */}
-
         <div className="ats-feedback-card">
-
           <div className="feedback-header">
-
-            <div className="feedback-icon warning-icon">
-              !
-            </div>
+            <div className="feedback-icon warning-icon">!</div>
 
             <div>
               <h3>Recommended Improvements</h3>
-
-              <p>
-                Changes that can improve your ATS score.
-              </p>
+              <p>Changes that may improve compatibility.</p>
             </div>
-
           </div>
-
 
           <div className="feedback-list">
-
-            <div>
-              <span>!</span>
-              <strong>Add role-specific keywords</strong>
-            </div>
-
-            <div>
-              <span>!</span>
-              <strong>Strengthen technical skills</strong>
-            </div>
-
-            <div>
-              <span>!</span>
-              <strong>Add measurable achievements</strong>
-            </div>
-
+            {!hasResult ? (
+              <p>Analyze your resume to receive recommendations.</p>
+            ) : visibleImprovements.length === 0 ? (
+              <p>
+                No low-scoring categories were detected by this basic
+                scoring method.
+              </p>
+            ) : (
+              visibleImprovements.map((item) => (
+                <div key={item.name}>
+                  <span>!</span>
+                  <strong>{item.message}</strong>
+                </div>
+              ))
+            )}
           </div>
-
         </div>
-
       </div>
-
     </div>
   )
 }

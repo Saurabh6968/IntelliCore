@@ -1,41 +1,91 @@
+
+import { useState } from 'react'
+import axios from 'axios'
+
 function SkillGap() {
-  const skills = [
-    {
-      name: 'Python',
-      score: 82,
-      status: 'Good',
-      type: 'good'
-    },
-    {
-      name: 'React.js',
-      score: 68,
-      status: 'Intermediate',
-      type: 'medium'
-    },
-    {
-      name: 'Data Structures',
-      score: 45,
-      status: 'Needs Improvement',
-      type: 'low'
-    },
-    {
-      name: 'Machine Learning',
-      score: 42,
-      status: 'Needs Improvement',
-      type: 'low'
+  const [targetRole, setTargetRole] = useState('Backend Developer')
+  const [skillGap, setSkillGap] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleAnalyze() {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      setError('Please log in before analyzing your skills.')
+      return
     }
-  ]
+
+    if (!targetRole.trim()) {
+      setError('Please enter a target job role.')
+      return
+    }
+
+    setIsAnalyzing(true)
+    setError('')
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5001/api/skill-gap',
+        { targetRole: targetRole.trim() },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      setSkillGap(response.data.skillGap)
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          'Unable to analyze your skills. Please try again.'
+      )
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const currentSkills = skillGap?.currentSkills || []
+  const requiredSkills = skillGap?.requiredSkills || []
+  const missingSkills = skillGap?.missingSkills || []
+  const recommendations = skillGap?.recommendations || []
+
+  const matchScore =
+    requiredSkills.length > 0
+      ? Math.round(
+          ((requiredSkills.length -
+            missingSkills.length) /
+            requiredSkills.length) *
+            100
+        )
+      : 0
+
+  const getSkillStatus = (skill) => {
+    if (missingSkills.some(
+      (item) => item.toLowerCase() === skill.toLowerCase()
+    )) {
+      return {
+        status: 'Needs Improvement',
+        type: 'low',
+      }
+    }
+
+    return {
+      status: 'Identified',
+      type: 'good',
+    }
+  }
+
+  const displayedSkills = currentSkills.map((name) => ({
+    name,
+    ...getSkillStatus(name),
+  }))
 
   return (
     <div className="skill-page">
-
-      {/* Header */}
-
       <div className="page-header">
-
-        <span className="card-eyebrow">
-          SKILL INTELLIGENCE
-        </span>
+        <span className="card-eyebrow">SKILL INTELLIGENCE</span>
 
         <h1>Skill Gap Analysis</h1>
 
@@ -43,205 +93,202 @@ function SkillGap() {
           Understand your current skills and identify the areas
           that need improvement for your target role.
         </p>
-
       </div>
-
-
-      {/* Summary Cards */}
-
-      <div className="skill-summary">
-
-        <div className="skill-summary-card">
-
-          <span>Overall Skill Match</span>
-
-          <strong>74%</strong>
-
-          <p>
-            Alignment with your target role
-          </p>
-
-        </div>
-
-
-        <div className="skill-summary-card">
-
-          <span>Skills Identified</span>
-
-          <strong>12</strong>
-
-          <p>
-            Technical and professional skills
-          </p>
-
-        </div>
-
-
-        <div className="skill-summary-card">
-
-          <span>Skills to Improve</span>
-
-          <strong>4</strong>
-
-          <p>
-            Recommended areas of focus
-          </p>
-
-        </div>
-
-      </div>
-
-
-      {/* Skill Profile */}
 
       <div className="skill-profile-card">
-
         <div className="section-heading">
-
           <div>
-            <span className="card-eyebrow">
-              YOUR SKILL PROFILE
-            </span>
-
-            <h2>Current Skill Levels</h2>
-
+            <span className="card-eyebrow">TARGET ROLE</span>
+            <h2>Choose Your Career Goal</h2>
             <p>
-              Based on your resume and current profile.
+              Enter the role you want to prepare for.
             </p>
           </div>
-
         </div>
 
+        <div className="skill-role-controls">
+          <label htmlFor="targetRole">Target job role</label>
 
-        <div className="skill-profile-list">
+          <input
+            id="targetRole"
+            type="text"
+            value={targetRole}
+            onChange={(event) =>
+              setTargetRole(event.target.value)
+            }
+            placeholder="e.g. AI Engineer"
+          />
 
-          {skills.map((skill) => (
-
-            <div
-              className="skill-profile-item"
-              key={skill.name}
-            >
-
-              <div className="skill-profile-info">
-
-                <div>
-                  <strong>{skill.name}</strong>
-
-                  <span className={`skill-status ${skill.type}`}>
-                    {skill.status}
-                  </span>
-                </div>
-
-                <strong className="skill-percentage">
-                  {skill.score}%
-                </strong>
-
-              </div>
-
-
-              <div className="skill-progress">
-
-                <div
-                  className={`skill-progress-fill ${skill.type}`}
-                  style={{
-                    width: `${skill.score}%`
-                  }}
-                ></div>
-
-              </div>
-
-            </div>
-
-          ))}
-
+          <button
+            className="analyze-resume-button"
+            type="button"
+            onClick={handleAnalyze}
+            disabled={isAnalyzing || !targetRole.trim()}
+          >
+            {isAnalyzing
+              ? 'Analyzing Skills...'
+              : 'Analyze My Skills →'}
+          </button>
         </div>
 
+        {error && <p role="alert">{error}</p>}
       </div>
 
-
-      {/* Focus Areas */}
-
-      <div className="skill-focus-card">
-
-        <div className="section-heading">
-
-          <div>
-            <span className="card-eyebrow">
-              RECOMMENDED FOCUS
-            </span>
-
-            <h2>Areas to Improve</h2>
-
-            <p>
-              Focus on these skills to improve your placement readiness.
-            </p>
-          </div>
-
+      {isAnalyzing && (
+        <div className="skill-focus-card">
+          Analyzing your saved resume for the {targetRole} role...
         </div>
+      )}
 
-
-        <div className="focus-list">
-
-          <div className="focus-item">
-
-            <div className="focus-number">
-              01
+      {skillGap && (
+        <>
+          <div className="skill-summary">
+            <div className="skill-summary-card">
+              <span>Overall Skill Match</span>
+              <strong>{matchScore}%</strong>
+              <p>Estimated match with required skills</p>
             </div>
 
-            <div>
-              <strong>
-                Data Structures & Algorithms
-              </strong>
-
-              <span>
-                Strengthen problem-solving and core DSA concepts.
-              </span>
+            <div className="skill-summary-card">
+              <span>Skills Identified</span>
+              <strong>{currentSkills.length}</strong>
+              <p>Skills found in your saved resume</p>
             </div>
 
+            <div className="skill-summary-card">
+              <span>Skills to Improve</span>
+              <strong>{missingSkills.length}</strong>
+              <p>Skills missing for your target role</p>
+            </div>
           </div>
 
-
-          <div className="focus-item">
-
-            <div className="focus-number">
-              02
+          <div className="skill-profile-card">
+            <div className="section-heading">
+              <div>
+                <span className="card-eyebrow">
+                  YOUR SKILL PROFILE
+                </span>
+                <h2>Current Skills</h2>
+                <p>
+                  Skills identified by the analysis for {targetRole}.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <strong>
-                Machine Learning
-              </strong>
-
-              <span>
-                Improve understanding of ML fundamentals and model evaluation.
-              </span>
-            </div>
-
+            {displayedSkills.length === 0 ? (
+              <p>
+                No current skills were identified. Check that your
+                saved resume contains readable skill information.
+              </p>
+            ) : (
+              <div className="skill-profile-list">
+                {displayedSkills.map((skill) => (
+                  <div
+                    className="skill-profile-item"
+                    key={skill.name}
+                  >
+                    <div className="skill-profile-info">
+                      <div>
+                        <strong>{skill.name}</strong>
+                        <span
+                          className={`skill-status ${skill.type}`}
+                        >
+                          {skill.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-
-          <div className="focus-item">
-
-            <div className="focus-number">
-              03
+          <div className="skill-focus-card">
+            <div className="section-heading">
+              <div>
+                <span className="card-eyebrow">
+                  REQUIRED SKILLS
+                </span>
+                <h2>Skills for {targetRole}</h2>
+              </div>
             </div>
 
-            <div>
-              <strong>
-                Advanced React.js
-              </strong>
-
-              <span>
-                Improve state management, APIs and advanced React concepts.
-              </span>
+            <div className="focus-list">
+              {requiredSkills.length === 0 ? (
+                <p>No required skills were returned.</p>
+              ) : (
+                requiredSkills.map((skill, index) => (
+                  <div className="focus-item" key={skill}>
+                    <div className="focus-number">
+                      {String(index + 1).padStart(2, '0')}
+                    </div>
+                    <div>
+                      <strong>{skill}</strong>
+                      <span>
+                        {missingSkills.some(
+                          (item) =>
+                            item.toLowerCase() === skill.toLowerCase()
+                        )
+                          ? 'This skill was identified as missing.'
+                          : 'This skill was not identified as missing.'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-
           </div>
 
-        </div>
+          <div className="skill-focus-card">
+            <div className="section-heading">
+              <div>
+                <span className="card-eyebrow">
+                  RECOMMENDED FOCUS
+                </span>
+                <h2>Areas to Improve</h2>
+                <p>
+                  Recommendations returned by the AI analysis.
+                </p>
+              </div>
+            </div>
 
-      </div>
+            <div className="focus-list">
+              {recommendations.length === 0 &&
+              missingSkills.length === 0 ? (
+                <p>No improvement recommendations were returned.</p>
+              ) : (
+                <>
+                  {missingSkills.map((skill, index) => (
+                    <div className="focus-item" key={skill}>
+                      <div className="focus-number">
+                        {String(index + 1).padStart(2, '0')}
+                      </div>
+                      <div>
+                        <strong>{skill}</strong>
+                        <span>
+                          Focus on learning and practicing this skill.
+                        </span>
+                      </div>
+                    </div>
+                  ))}
 
+                  {recommendations.map((recommendation, index) => (
+                    <div
+                      className="focus-item"
+                      key={`${index}-${recommendation}`}
+                    >
+                      <div className="focus-number">↗</div>
+                      <div>
+                        <strong>{recommendation}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

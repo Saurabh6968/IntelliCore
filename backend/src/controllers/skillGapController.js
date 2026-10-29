@@ -1,5 +1,5 @@
 const Resume = require("../models/Resume");
-const SkillGap = require("../models/SkillGap");
+const SkillGap = require("../models/skillGap");
 const { analyzeResume } = require("../services/aiService");
 
 const analyzeSkillGap = async (req, res, next) => {

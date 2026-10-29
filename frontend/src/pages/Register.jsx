@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 function Register() {
   const navigate = useNavigate()
@@ -26,36 +27,58 @@ function Register() {
     setError('')
   }
 
-  function handleSubmit(event) {
-    event.preventDefault()
 
-    if (
-      !formData.fullName.trim() ||
-      !formData.email.trim() ||
-      !formData.mobile.trim() ||
-      !formData.password.trim() ||
-      !formData.confirmPassword.trim()
-    ) {
-      setError('Please fill in all the fields.')
-      return
-    }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.')
-      return
-    }
+async function handleSubmit(event) {
+  event.preventDefault()
+  setError('')
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
+  if (
+    !formData.fullName.trim() ||
+    !formData.email.trim() ||
+    !formData.mobile.trim() ||
+    !formData.password ||
+    !formData.confirmPassword
+  ) {
+    setError('Please fill in all the fields.')
+    return
+  }
 
+  if (formData.password !== formData.confirmPassword) {
+    setError('Passwords do not match.')
+    return
+  }
+
+  if (formData.password.length < 6) {
+    setError('Password must be at least 6 characters.')
+    return
+  }
+
+  try {
     setIsCreating(true)
 
-    setTimeout(() => {
-      navigate('/introduction')
-    }, 1000)
+    const response = await axios.post(
+      'http://localhost:5001/api/auth/register',
+      {
+        name: formData.fullName.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      }
+    )
+
+    console.log('Registration successful:', response.data)
+    navigate('/login')
+  } catch (error) {
+    setError(
+      error.response?.data?.message ||
+      'Registration failed. Please try again.'
+    )
+  } finally {
+    setIsCreating(false)
   }
+}
+
+
 
   return (
     <div className="register-page">

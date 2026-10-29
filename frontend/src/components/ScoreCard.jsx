@@ -4,6 +4,11 @@ function ScoreCard({ title, score }) {
   const [displayScore, setDisplayScore] = useState(0)
 
   useEffect(() => {
+    if (score === null || score === undefined) {
+      setDisplayScore(0)
+      return
+    }
+
     let current = 0
 
     const interval = setInterval(() => {
@@ -20,15 +25,17 @@ function ScoreCard({ title, score }) {
     return () => clearInterval(interval)
   }, [score])
 
+  const notStarted = score === null || score === undefined
+
   return (
     <div className="score-card">
       <h3>{title}</h3>
 
       <div className="score">
-        {displayScore}%
+        {notStarted ? '—' : `${displayScore}%`}
       </div>
 
-      <p>Current Score</p>
+      <p>{notStarted ? 'Not started' : 'Current Score'}</p>
     </div>
   )
 }

@@ -1,3 +1,31 @@
+import { useEffect, useRef, useState } from 'react'
+
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5001'
+
+function getToken() {
+  return localStorage.getItem('token')
+}
+
+async function chatRequest(method = 'GET', body) {
+  const response = await fetch(`${API_URL}/api/career-chat`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: body ? JSON.stringify(body) : undefined
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Something went wrong')
+  }
+
+  return data
+}
+
 function CareerGuidance() {
   const careerPaths = [
     {
@@ -26,6 +54,89 @@ function CareerGuidance() {
     'Build 2–3 role-specific projects',
     'Practice technical and HR interviews'
   ]
+
+  const starterQuestions = [
+    'What should I focus on first for placements?',
+    'How do I choose between these career paths?',
+    'How can I improve my resume for my target role?'
+  ]
+
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [loadingHistory, setLoadingHistory] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+
+  const chatRef = useRef(null)
+  const messagesRef = useRef(null)
+
+  useEffect(() => {
+    async function loadChat() {
+      try {
+        const data = await chatRequest()
+        setMessages(data.messages || [])
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoadingHistory(false)
+      }
+    }
+
+    loadChat()
+  }, [])
+
+  // Keep the newest message in view (scrolls the chat box only)
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
+    }
+  }, [messages, sending])
+
+  async function sendMessage(text) {
+    const message = text.trim()
+
+    if (!message || sending) return
+
+    setError('')
+    setSending(true)
+
+    // Show the question immediately while the AI answers
+    setMessages((prev) => [...prev, { role: 'user', content: message }])
+    setInput('')
+
+    try {
+      const data = await chatRequest('POST', { message })
+      setMessages(data.messages)
+    } catch (err) {
+      setError(err.message)
+      // Remove the unsent question so it can be retried
+      setMessages((prev) => prev.slice(0, -1))
+      setInput(message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  function askAbout(text) {
+    if (chatRef.current) {
+      chatRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    sendMessage(text)
+  }
+
+  async function handleClear() {
+    if (sending) return
+
+    setError('')
+
+    try {
+      const data = await chatRequest('DELETE')
+      setMessages(data.messages || [])
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
   return (
     <div className="career-page">
@@ -143,7 +254,15 @@ function CareerGuidance() {
 
               </div>
 
-              <button className="career-explore-button">
+              <button
+                className="career-explore-button"
+                onClick={() =>
+                  askAbout(
+                    `Tell me about the ${career.title} career path and how I can prepare for it.`
+                  )
+                }
+                disabled={sending}
+              >
                 Explore Path →
               </button>
 
@@ -175,6 +294,7 @@ function CareerGuidance() {
 
             <p>
               Focus on these areas to move closer to your target career.
+              Click one to ask the advisor how.
             </p>
           </div>
 
@@ -185,9 +305,13 @@ function CareerGuidance() {
 
           {recommendations.map((recommendation, index) => (
 
-            <div
-              className="career-recommendation"
+            <button
+              className="career-recommendation career-recommendation-button"
               key={recommendation}
+              onClick={() =>
+                askAbout(`How do I do this: ${recommendation}?`)
+              }
+              disabled={sending}
             >
 
               <span>
@@ -198,9 +322,134 @@ function CareerGuidance() {
                 {recommendation}
               </strong>
 
-            </div>
+            </button>
 
           ))}
+
+        </div>
+
+      </div>
+
+
+      {/* AI Career Advisor Chat */}
+
+      <div className="career-chat" ref={chatRef}>
+
+        <div className="career-chat-header">
+
+          <div>
+            <span className="card-eyebrow">
+              AI CAREER ADVISOR
+            </span>
+
+            <h2>Ask Anything About Your Career</h2>
+
+            <p>
+              Get practical advice on skills, interviews, learning
+              paths and placements, based on your resume.
+            </p>
+          </div>
+
+          {messages.length > 0 && (
+            <button
+              className="career-chat-clear"
+              onClick={handleClear}
+              disabled={sending}
+            >
+              Clear chat
+            </button>
+          )}
+
+        </div>
+
+
+        <div className="career-chat-messages" ref={messagesRef}>
+
+          {loadingHistory && (
+            <p className="career-chat-empty">
+              Loading your conversation...
+            </p>
+          )}
+
+          {!loadingHistory && messages.length === 0 && !sending && (
+            <div className="career-chat-empty">
+
+              <p>
+                No messages yet. Try one of these:
+              </p>
+
+              <div className="career-chat-starters">
+                {starterQuestions.map((question) => (
+                  <button
+                    key={question}
+                    onClick={() => sendMessage(question)}
+                    disabled={sending}
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+
+            </div>
+          )}
+
+          {messages.map((item, index) => (
+            <div
+              className={`career-chat-message ${item.role}`}
+              key={index}
+            >
+              <span className="career-chat-author">
+                {item.role === 'user' ? 'YOU' : 'AI ADVISOR'}
+              </span>
+
+              <div className="career-chat-bubble">
+                {item.content}
+              </div>
+            </div>
+          ))}
+
+          {sending && (
+            <div className="career-chat-message assistant">
+              <span className="career-chat-author">
+                AI ADVISOR
+              </span>
+
+              <div className="career-chat-bubble career-chat-typing">
+                Thinking...
+              </div>
+            </div>
+          )}
+
+        </div>
+
+
+        {error && (
+          <div className="career-chat-error">
+            {error}
+          </div>
+        )}
+
+
+        <div className="career-chat-input-row">
+
+          <input
+            type="text"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') sendMessage(input)
+            }}
+            placeholder="Ask a career question..."
+            maxLength={2000}
+            disabled={sending}
+          />
+
+          <button
+            onClick={() => sendMessage(input)}
+            disabled={!input.trim() || sending}
+          >
+            {sending ? 'Sending...' : 'Send →'}
+          </button>
 
         </div>
 

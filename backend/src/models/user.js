@@ -39,6 +39,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    targetRole: {
+  type: String,
+  trim: true,
+},
+
+careerArea: {
+  type: String,
+  trim: true,
+},
+
     // Education
     education: [
       {

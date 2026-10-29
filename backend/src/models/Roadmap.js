@@ -44,6 +44,12 @@ const roadmapSchema = new mongoose.Schema(
             trim: true,
           },
         ],
+
+        status: {
+          type: String,
+          enum: ["completed", "current", "upcoming"],
+          default: "upcoming",
+        },
       },
     ],
   },
