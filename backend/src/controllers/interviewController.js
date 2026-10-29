@@ -1,4 +1,4 @@
-const Interview = require("../models/Interview");
+const Interview = require("../models/interview");
 const Resume = require("../models/Resume");
 const { analyzeResume } = require("../services/aiService");
 
@@ -87,6 +87,7 @@ Rules:
     const analysis = await analyzeResume({
       ...resume.toObject(),
       interviewPrompt: prompt,
+      interviewMode: "questions",
     });
 
     res.status(200).json({
@@ -167,6 +168,7 @@ Rules:
 
     const analysis = await analyzeResume({
       interviewPrompt: prompt,
+      interviewMode: "evaluation",
     });
 
     interview.questions.push({

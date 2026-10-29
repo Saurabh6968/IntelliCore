@@ -1,4 +1,11 @@
-require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+const dotenv = require("dotenv");
+
+const envFile = fs.existsSync(path.join(__dirname, "..", ".env"))
+  ? path.join(__dirname, "..", ".env")
+  : path.join(__dirname, "..", ".ENV");
+dotenv.config({ path: envFile });
 
 const app = require("./app");
 const connectDB = require("./db");

@@ -152,3 +152,9 @@ __pycache__/
 
 # Test Uploads
 uploads/
+# macOS files
+.DS_Store
+
+# Python virtual environments
+.venv/
+.venv-deploy/
