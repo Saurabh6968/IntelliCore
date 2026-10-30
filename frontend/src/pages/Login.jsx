@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -10,7 +11,7 @@ function Login() {
 
   const navigate = useNavigate()
 
-  function handleLogin(event) {
+  async function handleLogin(event) {
     event.preventDefault()
 
     setError('')
@@ -22,71 +23,55 @@ function Login() {
 
     setIsLoggingIn(true)
 
-    const response = await axios.post(
-  `${import.meta.env.VITE_API_URL}/api/auth/login`,
-  {
-    email,
-    password,
-  }
-);
-      .then((response) => {
-        localStorage.setItem('token', response.data.token)
-        navigate('/introduction')
-      })
-      .catch((error) => {
-        setError(error.response?.data?.message || 'Login failed')
-      })
-      .finally(() => {
-        setIsLoggingIn(false)
-      })
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        {
+          email,
+          password,
+        }
+      )
+
+      localStorage.setItem('token', response.data.token)
+      navigate('/introduction')
+
+    } catch (error) {
+      setError(error.response?.data?.message || 'Login failed')
+
+    } finally {
+      setIsLoggingIn(false)
+    }
   }
 
   return (
     <div className="login-page">
-
       <div className="login-brand">
-
-        <div className="login-logo">
-          I
-        </div>
+        <div className="login-logo">I</div>
 
         <div>
           <h1>IntelliCore</h1>
           <p>AI-Powered Career Intelligence</p>
         </div>
-
       </div>
 
-
       <div className="login-container">
-
         <div className="login-card">
-
           <div className="login-card-header">
-
             <span className="card-eyebrow">
               WELCOME BACK
             </span>
 
-            <h2>
-              Continue your journey.
-            </h2>
+            <h2>Continue your journey.</h2>
 
             <p>
               Sign in to access your personalized placement
               intelligence dashboard.
             </p>
-
           </div>
 
-
           <form onSubmit={handleLogin}>
-
             <div className="login-field">
-
-              <label>
-                Email Address
-              </label>
+              <label>Email Address</label>
 
               <input
                 type="email"
@@ -97,15 +82,10 @@ function Login() {
                   setError('')
                 }}
               />
-
             </div>
 
-
             <div className="login-field">
-
-              <label>
-                Password
-              </label>
+              <label>Password</label>
 
               <input
                 type="password"
@@ -116,22 +96,13 @@ function Login() {
                   setError('')
                 }}
               />
-
             </div>
 
-
             <div className="login-options">
-
               <label className="remember-me">
-
                 <input type="checkbox" />
-
-                <span>
-                  Remember me
-                </span>
-
+                <span>Remember me</span>
               </label>
-
 
               <button
                 type="button"
@@ -139,9 +110,7 @@ function Login() {
               >
                 Forgot password?
               </button>
-
             </div>
-
 
             {error && (
               <div className="login-error">
@@ -149,62 +118,39 @@ function Login() {
               </div>
             )}
 
-
             <button
               type="submit"
               className="login-button"
               disabled={isLoggingIn}
             >
+              {isLoggingIn ? 'Signing In...' : 'Sign In'}
 
-              {isLoggingIn
-                ? 'Signing In...'
-                : 'Sign In'
-              }
-
-              {!isLoggingIn && (
-                <span>→</span>
-              )}
-
+              {!isLoggingIn && <span>→</span>}
             </button>
-
           </form>
-
 
           <div className="login-divider">
             <span>OR</span>
           </div>
 
-
           <div className="login-register">
             <span>New to IntelliCore?</span>
 
             <button
-            type="button"
-            onClick={() => navigate('/register')}
-           >
-             Create an account
-             </button>
+              type="button"
+              onClick={() => navigate('/register')}
+            >
+              Create an account
+            </button>
           </div>
-
         </div>
-
 
         <div className="login-footer">
-
-          <span>
-            Intelligent preparation.
-          </span>
-
+          <span>Intelligent preparation.</span>
           <span>•</span>
-
-          <span>
-            Better placement readiness.
-          </span>
-
+          <span>Better placement readiness.</span>
         </div>
-
       </div>
-
     </div>
   )
 }
